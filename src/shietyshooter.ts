@@ -9,7 +9,6 @@ export class ShietyShooter extends SquireGame {
     this.gameState = new GameState(this);
     this.stateManager.state = this.gameState;
   }
-
 }
 
 export class GameState extends State {
@@ -20,6 +19,7 @@ export class GameState extends State {
   private characterSprite2: any = null;
   private grassSprite: any = null;
   private dirtSprite: any = null;
+  private song: any = null;
 
   private health = 100;
   private reloadTime = 40;
@@ -36,9 +36,7 @@ export class GameState extends State {
     super(gameCtx);
     // Load assets
     this.characterSprite1 = new Image();
-    this.characterSprite1.onload = () => {
-      console.log('Image loaded: ' + 'https://punkweb.net/static/punkweb/js/assets/character-right.png');
-    };
+    this.characterSprite1.onload = () => {};
     this.characterSprite1.src = 'https://punkweb.net/static/punkweb/js/assets/character-right.png';
     this.characterSprite2 = new Image();
     this.characterSprite2.onload = () => {
@@ -55,6 +53,9 @@ export class GameState extends State {
       console.log('Image loaded: ' + 'https://punkweb.net/static/punkweb/js/assets/dirt.png');
     };
     this.dirtSprite.src = 'https://punkweb.net/static/punkweb/js/assets/dirt.png';
+    this.song = new Audio('https://punkweb.net/static/punkweb/js/assets/Shiety_Blues-JackStraw.mp3');
+    this.song.loop = true;
+    this.song.currentTime = 0;
     this.gameCtx.canvas.addEventListener('click', this.onClick.bind(this), false);
   }
 
@@ -77,6 +78,7 @@ export class GameState extends State {
       this.enemyProjectiles = [];
       this.enemies = [];
       this.started = true;
+      this.song.play();
     }
   }
 
@@ -188,6 +190,8 @@ export class GameState extends State {
         if (this.health < 1) {
           // PLAYER DIED
           this.started = false;
+          this.song.currentTime = 0;
+          this.song.pause();
         }
       }
     });
