@@ -1,0 +1,26 @@
+{
+  "name": "squire-client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "desktop.js",
+  "scripts": {
+    "start": "npm run compile && electron . --debug",
+    "compile": "tsc & browserify build/shietyshooter.js -o build/bundle.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/lodash": "^4.14.74",
+    "@types/node": "^8.5.1",
+    "@types/ws": "^4.0.0",
+    "browserify": "^14.4.0",
+    "bufferutil": "^3.0.3",
+    "electron": "^1.7.9",
+    "electron-json-storage": "^4.0.2",
+    "lodash": "^4.17.4",
+    "tsify": "^3.0.3",
+    "typescript": "^2.6.2",
+    "utf-8-validate": "^4.0.0",
+    "ws": "^3.2.1"
+  }
+}

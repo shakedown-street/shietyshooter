@@ -1,0 +1,7 @@
+**/build
+**/dump_*.json
+**/*.pyc
+**/*.psd
+**/node_modules
+**/package-lock.json
+**/yarn.lock
