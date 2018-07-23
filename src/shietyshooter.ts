@@ -14,6 +14,8 @@ export class ShietyShooter extends SquireGame {
 
 export class GameState extends State {
 
+  private started = false;
+
   private characterSprite1: any = null;
   private characterSprite2: any = null;
   private grassSprite: any = null;
@@ -53,6 +55,7 @@ export class GameState extends State {
       console.log('Image loaded: ' + 'https://punkweb.net/static/punkweb/js/assets/dirt.png');
     };
     this.dirtSprite.src = 'https://punkweb.net/static/punkweb/js/assets/dirt.png';
+    this.gameCtx.canvas.addEventListener('click', this.onClick.bind(this), false);
   }
 
   public onClick(canvasEvent: any) {
@@ -63,23 +66,30 @@ export class GameState extends State {
     let actualClickX = canvasEvent.clientX - offsetX;
     let actualClickY = canvasEvent.clientY - offsetY;
 
-    this.ownProjectiles.push({
-      x: 200,
-      y: 600 - 128 - 120
-    });
+    if (this.started) {
+      this.ownProjectiles.push({
+        x: 200,
+        y: 600 - 128 - 120
+      });
+    } else {
+      this.health = 100;
+      this.ownProjectiles = [];
+      this.enemyProjectiles = [];
+      this.enemies = [];
+      this.started = true;
+    }
   }
 
-  public init() {
-    this.gameCtx.canvas.addEventListener('click', this.onClick.bind(this), false);
-  }
+  public init() { }
 
-  public end() {
-    this.gameCtx.canvas.removeEventListener('click', this.onClick.bind(this), false);
-    this.gameCtx.stateManager.state = new GameOverState(this.gameCtx);
-  }
+  public end() { }
 
   public render(r: Renderer) {
     r.rect('#7EC0EE', 0, 0, 1024, 600);
+    if (!this.started) {
+      r.text('Click to start', 12, 160, 'black', '72px Verdana');
+      return;
+    }
     if (this.grassSprite) {
       for (let i = 0; i < 1024; i += 128) {
         let dx = i;
@@ -119,6 +129,9 @@ export class GameState extends State {
   }
 
   public update(dt: number) {
+    if (!this.started) {
+      return;
+    }
     // Randomly create enemies 1% of every game tick
     if (Math.random() > .99) {
       this.enemies.push({
@@ -173,35 +186,10 @@ export class GameState extends State {
         this.health -= this.enemyDamage;
         this.enemyProjectiles.splice(i, 1);
         if (this.health < 1) {
-          this.end();
+          // PLAYER DIED
+          this.started = false;
         }
       }
     });
   }
-}
-
-export class GameOverState extends State {
-
-  constructor(gameCtx: any) {
-    super(gameCtx);
-  }
-
-  public init() {
-  }
-
-  public end() {
-  }
-
-  public render(r: Renderer) {
-    r.text('GAME OVER', 12, 80, 'black', '72px Verdana');
-  }
-
-  public update() {
-
-  }
-}
-
-window.onload = () => {
-  let shietyshooter = new ShietyShooter();
-  shietyshooter.run();
 }
