@@ -193,3 +193,8 @@ export class GameState extends State {
     });
   }
 }
+
+window.onload = () => {
+  let shietyshooter = new ShietyShooter();
+  shietyshooter.run();
+}
