@@ -19,6 +19,7 @@ export class GameState extends State {
   private characterSprite2: any = null;
   private grassSprite: any = null;
   private dirtSprite: any = null;
+  private skySprite: any = null;
   private song: any = null;
 
   private health = 100;
@@ -32,30 +33,26 @@ export class GameState extends State {
 
   private enemies: any[] = [];
 
+  // Keeps track of the sky scrolling position.  Resets to 0 after going over 1024
+  private skyTick = 0;
+
   constructor(gameCtx: any) {
     super(gameCtx);
     // Load assets
     this.characterSprite1 = new Image();
-    this.characterSprite1.onload = () => {};
     this.characterSprite1.src = 'https://punkweb.net/static/punkweb/js/assets/character-right.png';
     this.characterSprite2 = new Image();
-    this.characterSprite2.onload = () => {
-      console.log('Image loaded: ' + 'https://punkweb.net/static/punkweb/js/assets/character-left.png');
-    };
     this.characterSprite2.src = 'https://punkweb.net/static/punkweb/js/assets/character-left.png';
     this.grassSprite = new Image();
-    this.grassSprite.onload = () => {
-      console.log('Image loaded: ' + 'https://punkweb.net/static/punkweb/js/assets/grass.png');
-    };
     this.grassSprite.src = 'https://punkweb.net/static/punkweb/js/assets/grass.png';
     this.dirtSprite = new Image();
-    this.dirtSprite.onload = () => {
-      console.log('Image loaded: ' + 'https://punkweb.net/static/punkweb/js/assets/dirt.png');
-    };
     this.dirtSprite.src = 'https://punkweb.net/static/punkweb/js/assets/dirt.png';
+    this.skySprite = new Image();
+    this.skySprite.src = 'https://punkweb.net/static/punkweb/js/assets/clouds.jpg';
     this.song = new Audio('https://punkweb.net/static/punkweb/js/assets/Shiety_Blues-JackStraw.mp3');
     this.song.loop = true;
     this.song.currentTime = 0;
+    this.song.volume = .35;
     this.gameCtx.canvas.addEventListener('click', this.onClick.bind(this), false);
   }
 
@@ -86,8 +83,20 @@ export class GameState extends State {
 
   public end() { }
 
+  public renderSky(r: Renderer, skyTick: number) {
+    for (let y = 0; y < (1024 * 2); y += 512) {
+      for (let x = 0; x < (1024 * 2); x += 512) {
+        r.image(this.skySprite, 0, 0, 512, 512, x - skyTick, y, 512, 512);
+      }
+    }
+  }
+
   public render(r: Renderer) {
-    r.rect('#7EC0EE', 0, 0, 1024, 600);
+    this.skyTick++;
+    this.renderSky(r, this.skyTick);
+    if (this.skyTick >= 1024) {
+      this.skyTick = 0;
+    }
     if (!this.started) {
       r.text('Click to start', 12, 160, 'black', '72px Verdana');
       return;
@@ -110,7 +119,8 @@ export class GameState extends State {
         r.image(this.characterSprite2, 0, 0, 161, 203, obj.x, dy, 161, 203);
         let percentHealth = obj.health / 100;
         r.rect('#282828', obj.x + 80, dy - 40, 104, 12);
-        r.rect('red', obj.x + 82, dy - 38, 100 * percentHealth, 8);
+        r.rect('red', obj.x + 82, dy - 38, 100, 8);
+        r.rect('green', obj.x + 82, dy - 38, 100 * percentHealth, 8);
       });
     }
     // Projectiles
@@ -127,7 +137,8 @@ export class GameState extends State {
     // Player health
     let percentHealth = this.health / 100;
     r.rect('#282828', 12, 12, 240, 24);
-    r.rect('red', 14, 14, 236 * percentHealth, 20);
+    r.rect('red', 14, 14, 236, 20);
+    r.rect('green', 14, 14, 236 * percentHealth, 20);
   }
 
   public update(dt: number) {
@@ -175,13 +186,14 @@ export class GameState extends State {
           firstEnemy.health -= ((Math.random() * this.playerMaxDamage) + this.playerMinDamage);
           this.ownProjectiles.splice(i, 1);
           if (firstEnemy.health < 1) {
+            // ENEMY DIED
             let index = this.enemies.indexOf(firstEnemy);
             this.enemies.splice(index, 1);
           }
         }
       }
     });
-    // Move enemy projectiles and check fo collision on player
+    // Move enemy projectiles and check for collision on player
     this.enemyProjectiles.forEach((obj, i) => {
       obj.x -= 15;
       if (obj.x <= 200) {
