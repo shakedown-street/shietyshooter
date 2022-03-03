@@ -25,6 +25,8 @@ export class GameState extends State {
   private enemyDamage = 5;
   private playerMaxDamage = 40;
   private playerMinDamage = 20;
+  private playerJumpTick = -1;
+  private playerJumpDirection = '+';
 
   private ownProjectiles: any[] = [];
   private enemyProjectiles: any[] = [];
@@ -54,8 +56,9 @@ export class GameState extends State {
     this.song = new Audio('https://punkweb.net/static/punkweb/js/assets/shietyshooter/Shiety_Blues-JackStraw.mp3');
     this.song.loop = true;
     this.song.currentTime = 0;
-    this.song.volume = 0.35;
+    this.song.volume = 0.0;
     this.gameCtx.canvas.addEventListener('click', this.onClick.bind(this), false);
+    this.gameCtx.canvas.addEventListener('keydown', this.onKeydown.bind(this), false);)
   }
 
   public onClick(canvasEvent: any) {
@@ -74,6 +77,7 @@ export class GameState extends State {
       });
     } else {
       this.health = 100;
+      this.playerJumpTick = -1;
       this.ownProjectiles = [];
       this.enemyProjectiles = [];
       this.enemies = [];
@@ -81,6 +85,16 @@ export class GameState extends State {
       this.killCounter = 0;
       this.started = true;
       this.song.play();
+    }
+  }
+
+  public onKeydown(canvasEvent: any) {
+    if (canvasEvent.keyCode === 32) {
+      // space
+      if (this.started && this.playerJumpTick === -1) {
+        this.playerJumpTick = 0;
+        this.playerJumpDirection = '+';
+      }
     }
   }
 
@@ -114,7 +128,10 @@ export class GameState extends State {
       }
     }
     if (this.characterSprite1) {
-      let dy = 600 - 128 - 203;
+      let dy =  600 - 128 - 203;
+      if (this.playerJumpTick !== -1) {
+        dy -= this.playerJumpTick * 10;
+      }
       r.image(this.characterSprite1, 0, 0, 161, 203, 40, dy, 161, 203);
     }
     // Enemies and their health bars
@@ -191,6 +208,22 @@ export class GameState extends State {
         }
       });
     }
+    // Player jumping
+    if (this.playerJumpTick > -1) {
+      if (this.playerJumpDirection === '+') {
+        this.playerJumpTick++;
+      } else {
+        this.playerJumpTick--;
+      }
+      if (this.playerJumpTick >= 15) {
+        this.playerJumpDirection = '-';
+        console.log('jump switch');
+      }
+      if (this.playerJumpTick >= 30) {
+        this.playerJumpTick = -1;
+        console.log('jump stop')
+      }
+    }
     // Move own projectiles and check for collision on first enemy
     this.ownProjectiles.forEach((obj, i) => {
       obj.x += 15;
@@ -223,6 +256,7 @@ export class GameState extends State {
         if (this.health < 1) {
           // PLAYER DIED
           this.started = false;
+          this.playerJumpTick = -1;
           this.song.currentTime = 0;
           this.song.pause();
         }
