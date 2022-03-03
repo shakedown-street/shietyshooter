@@ -1,7 +1,6 @@
-import { Renderer, State, SquireGame } from './squire';
+import { Renderer, State, SquireGame } from 'squire-ts';
 
 export class ShietyShooter extends SquireGame {
-
   private gameState: GameState;
 
   constructor() {
@@ -12,7 +11,6 @@ export class ShietyShooter extends SquireGame {
 }
 
 export class GameState extends State {
-
   private started = false;
 
   private characterSprite1: any = null;
@@ -33,6 +31,10 @@ export class GameState extends State {
 
   private enemies: any[] = [];
 
+  private hearts: any[] = [];
+
+  private killCounter = 0;
+
   // Keeps track of the sky scrolling position.  Resets to 0 after going over 1024
   private skyTick = 0;
 
@@ -40,24 +42,25 @@ export class GameState extends State {
     super(gameCtx);
     // Load assets
     this.characterSprite1 = new Image();
-    this.characterSprite1.src = 'https://punkweb.net/static/punkweb/js/assets/character-right.png';
+    this.characterSprite1.src = 'https://punkweb.net/static/punkweb/js/assets/shietyshooter/character-right.png';
     this.characterSprite2 = new Image();
-    this.characterSprite2.src = 'https://punkweb.net/static/punkweb/js/assets/character-left.png';
+    this.characterSprite2.src = 'https://punkweb.net/static/punkweb/js/assets/shietyshooter/character-left.png';
     this.grassSprite = new Image();
-    this.grassSprite.src = 'https://punkweb.net/static/punkweb/js/assets/grass.png';
+    this.grassSprite.src = 'https://punkweb.net/static/punkweb/js/assets/shietyshooter/grass.png';
     this.dirtSprite = new Image();
-    this.dirtSprite.src = 'https://punkweb.net/static/punkweb/js/assets/dirt.png';
+    this.dirtSprite.src = 'https://punkweb.net/static/punkweb/js/assets/shietyshooter/dirt.png';
     this.skySprite = new Image();
-    this.skySprite.src = 'https://punkweb.net/static/punkweb/js/assets/clouds.jpg';
-    this.song = new Audio('https://punkweb.net/static/punkweb/js/assets/Shiety_Blues-JackStraw.mp3');
+    this.skySprite.src = 'https://punkweb.net/static/punkweb/js/assets/shietyshooter/clouds.jpg';
+    this.song = new Audio('https://punkweb.net/static/punkweb/js/assets/shietyshooter/Shiety_Blues-JackStraw.mp3');
     this.song.loop = true;
     this.song.currentTime = 0;
-    this.song.volume = .35;
+    this.song.volume = 0.35;
     this.gameCtx.canvas.addEventListener('click', this.onClick.bind(this), false);
   }
 
   public onClick(canvasEvent: any) {
-    let offsetX, offsetY = 0;
+    let offsetX,
+      offsetY = 0;
     let element = this.gameCtx.canvas;
     offsetX = this.gameCtx.canvas.offsetLeft;
     offsetY = this.gameCtx.canvas.offsetTop;
@@ -67,25 +70,27 @@ export class GameState extends State {
     if (this.started) {
       this.ownProjectiles.push({
         x: 200,
-        y: 600 - 128 - 120
+        y: 600 - 128 - 120,
       });
     } else {
       this.health = 100;
       this.ownProjectiles = [];
       this.enemyProjectiles = [];
       this.enemies = [];
+      this.hearts = [];
+      this.killCounter = 0;
       this.started = true;
       this.song.play();
     }
   }
 
-  public init() { }
+  public init() {}
 
-  public end() { }
+  public end() {}
 
   public renderSky(r: Renderer, skyTick: number) {
-    for (let y = 0; y < (1024 * 2); y += 512) {
-      for (let x = 0; x < (1024 * 2); x += 512) {
+    for (let y = 0; y < 1024 * 2; y += 512) {
+      for (let x = 0; x < 1024 * 2; x += 512) {
         r.image(this.skySprite, 0, 0, 512, 512, x - skyTick, y, 512, 512);
       }
     }
@@ -104,7 +109,7 @@ export class GameState extends State {
     if (this.grassSprite) {
       for (let i = 0; i < 1024; i += 128) {
         let dx = i;
-        let dy = 600-128;
+        let dy = 600 - 128;
         r.image(this.grassSprite, 0, 0, 128, 128, dx, dy, 128, 128);
       }
     }
@@ -123,6 +128,13 @@ export class GameState extends State {
         r.rect('green', obj.x + 82, dy - 38, 100 * percentHealth, 8);
       });
     }
+    // Hearts
+    if (this.hearts) {
+      this.hearts.forEach((obj) => {
+        let dy = 600 - 128 - 48;
+        r.rect('#FF0000', obj.x, dy, 48, 48);
+      });
+    }
     // Projectiles
     if (this.ownProjectiles) {
       this.ownProjectiles.forEach((obj) => {
@@ -139,6 +151,8 @@ export class GameState extends State {
     r.rect('#282828', 12, 12, 240, 24);
     r.rect('red', 14, 14, 236, 20);
     r.rect('green', 14, 14, 236 * percentHealth, 20);
+    // Kill counter
+    r.text('Kills: ' + this.killCounter, 1024 - 200, 48, 'black');
   }
 
   public update(dt: number) {
@@ -146,11 +160,17 @@ export class GameState extends State {
       return;
     }
     // Randomly create enemies 1% of every game tick
-    if (Math.random() > .99) {
+    if (Math.random() > 0.99) {
       this.enemies.push({
         x: 1024,
         lastShot: 30,
         health: 100,
+      });
+    }
+    // Randomly create hearts 0.5% of every game tick
+    if (Math.random() > 0.995) {
+      this.hearts.push({
+        x: 1024,
       });
     }
     if (this.enemies) {
@@ -162,10 +182,10 @@ export class GameState extends State {
         }
         // Every 60 updates enemy shoots
         obj.lastShot++;
-        if (obj.lastShot > 60) {
+        if (obj.lastShot > 60 && obj.x < 1024 - 161) {
           this.enemyProjectiles.push({
             x: obj.x,
-            y: 600 - 128 - 120
+            y: 600 - 128 - 120,
           });
           obj.lastShot = 0;
         }
@@ -182,13 +202,14 @@ export class GameState extends State {
         let firstEnemy = this.enemies.sort((a: any, b: any) => {
           return a.x - b.x;
         })[0];
-        if (obj.x >= firstEnemy.x) {
-          firstEnemy.health -= ((Math.random() * this.playerMaxDamage) + this.playerMinDamage);
+        if (obj.x >= firstEnemy.x && firstEnemy.x < 1024 - 161) {
+          firstEnemy.health -= Math.random() * this.playerMaxDamage + this.playerMinDamage;
           this.ownProjectiles.splice(i, 1);
           if (firstEnemy.health < 1) {
             // ENEMY DIED
             let index = this.enemies.indexOf(firstEnemy);
             this.enemies.splice(index, 1);
+            this.killCounter++;
           }
         }
       }
@@ -207,10 +228,22 @@ export class GameState extends State {
         }
       }
     });
+    // Move enemy projectiles and check for collision on player
+    this.hearts.forEach((obj, i) => {
+      obj.x -= 5;
+      if (obj.x <= 200) {
+        if (this.health + 10 >= 100) {
+          this.health = 100;
+        } else {
+          this.health += 10;
+        }
+        this.hearts.splice(i, 1);
+      }
+    });
   }
 }
 
 window.onload = () => {
   let shietyshooter = new ShietyShooter();
   shietyshooter.run();
-}
+};

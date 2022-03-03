@@ -1,26 +1,27 @@
 {
-  "name": "squire-client",
-  "version": "1.0.0",
+  "name": "shietyshooter",
+  "version": "0.1.0",
   "description": "",
-  "main": "desktop.js",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
-    "start": "npm run compile && electron . --debug",
-    "compile": "tsc & browserify build/shietyshooter.js -o build/bundle.js"
+    "start": "parcel index.html",
+    "build": "tsc src/shietyshooter.ts --watch",
+    "format": "prettier --write 'src/**/*.{html,css,scss,js,ts,md}'"
   },
-  "author": "",
-  "license": "ISC",
+  "files": [
+    "lib/**/*"
+  ],
+  "keywords": [],
+  "author": "Punkweb (https://github.com/Punkweb/)",
+  "license": "BSD-3-Clause",
   "dependencies": {
-    "@types/lodash": "^4.14.74",
-    "@types/node": "^8.5.1",
-    "@types/ws": "^4.0.0",
-    "browserify": "^14.4.0",
-    "bufferutil": "^3.0.3",
-    "electron": "^1.7.9",
-    "electron-json-storage": "^4.0.2",
-    "lodash": "^4.17.4",
-    "tsify": "^3.0.3",
-    "typescript": "^2.6.2",
-    "utf-8-validate": "^4.0.0",
-    "ws": "^3.2.1"
+    "squire-ts": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.21",
+    "parcel-bundler": "^1.12.5",
+    "prettier": "^2.5.1",
+    "typescript": "^4.5.5"
   }
 }
